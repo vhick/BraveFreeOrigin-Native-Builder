@@ -27,7 +27,7 @@ try {
     }
     $packageHash = ([BitConverter]::ToString($builderHash.ComputeHash($concatenated.ToArray()))).Replace('-','').ToLowerInvariant().Substring(0,8)
 } finally { $builderHash.Dispose(); $concatenated.Dispose() }
-$preTag = "portable-bfo-$($resolved.upstream_release)-native-b1r2-g$($resolved.upstream_commit.Substring(0,8))-p$packageHash"
+$preTag = "portable-bfo-$($resolved.upstream_release)-native-b1r3-g$($resolved.upstream_commit.Substring(0,8))-p$packageHash"
 # Protect an existing verified release from recompilation with different PE timestamps.
 if ($env:GITHUB_ACTIONS -eq 'true') {
     $oldError = $ErrorActionPreference
@@ -94,7 +94,13 @@ if (!(Test-Path $target)) { throw 'Compiled native exe does not exist' }
 Copy-Item -LiteralPath 'work/upstream/LICENSE' -Destination (Join-Path $stage 'LICENSES/UPSTREAM-MIT.txt') -ErrorAction Stop
 $loc = @(Get-ChildItem 'work/upstream/locales' -File -Filter '*.json' -ErrorAction Stop)
 if ($loc.Count -lt 1) { throw 'No upstream locale data; refusing incomplete GUI release' }
-foreach ($f in $loc) { Copy-Item -LiteralPath $f.FullName -Destination (Join-Path $stage 'locales' $f.Name) -ErrorAction Stop }
+# Windows PowerShell 5.1 Join-Path takes only Path and ChildPath (not 3 positionals).
+# Using an intermediate directory also handles locale names with spaces/Unicode.
+$localeDestDir = Join-Path -Path $stage -ChildPath 'locales'
+foreach ($f in $loc) {
+    $localeTarget = Join-Path -Path $localeDestDir -ChildPath $f.Name
+    Copy-Item -LiteralPath $f.FullName -Destination $localeTarget -ErrorAction Stop
+}
 Copy-Item -LiteralPath 'docs/PACKAGE-README.txt' -Destination (Join-Path $stage 'README.txt') -ErrorAction Stop
 $identity = Get-Content 'work/build_identity.json' -Raw -Encoding UTF8 | ConvertFrom-Json
 $identity | Add-Member -NotePropertyName 'builder_package_hash' -NotePropertyValue $packageHash
@@ -105,7 +111,7 @@ $identity | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $stage
 $version = $identity.upstream_release
 $shortSha = $identity.upstream_commit.Substring(0,8)
 $tag = $preTag
-$name = "BraveFreeOrigin-NativePortable-$version-b1r2-g$shortSha-p$packageHash.zip"
+$name = "BraveFreeOrigin-NativePortable-$version-b1r3-g$shortSha-p$packageHash.zip"
 $zip = Join-Path $repo ('dist/' + $name)
 if (Test-Path $zip) { throw 'Refusing to overwrite an existing native artifact' }
 # Python zipfile creates explicit Data/ directory entry, preserving empty folder.

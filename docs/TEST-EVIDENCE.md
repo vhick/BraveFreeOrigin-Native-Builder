@@ -1,4 +1,4 @@
-# Validation evidence — Brave Free Origin Native Builder b1r2
+# Validation evidence — Brave Free Origin Native Builder b1r3
 
 **Evidence at authoring (2026-11-10).** This project was developed in a Linux-based container without a Windows desktop or functioning outbound source-fetch access for `git`. No Windows PE was produced here. A tested ZIP builder kit is NOT the same thing as a proven Windows portable release.
 
@@ -34,3 +34,19 @@
   WinForms initialization and rejects ambiguous/changed boundaries.
 - Six local Python unit tests passed (STATIC-VALIDATED); no Windows compilation
   or interactive desktop runtime has been performed for b1r2.
+
+
+## b1r3 offline regression and uploaded b1r2 Windows log
+
+- Uploaded b1r2 log: six offline adapter tests passed; verified upstream
+  `v2.0.2` commit `61974184afca12fe51aedc6f92e13337a426526b`;
+  source adapter succeeded; packaging failed at the PowerShell 5.1 locale
+  copy call with `PositionalParameterNotFound` for `ar.json`.
+- The script had advanced beyond the C# compiler exit-code and executable
+  existence checks. **WINDOWS-COMPILED (inferred from control flow)** for
+  b1r2, but no independent compiled EXE test was reached.
+- b1r3 replaces the incompatible Join-Path call and adds a corresponding
+  offline regression. **Windows compilation, self-test, GUI behavior and
+  publication of b1r3 have not yet been verified.**
+
+- Regression test suite includes Windows PowerShell 5.1 locale-copy smoke test using three fake JSON language files and a Unicode/spaces folder. This test runs on `windows-2022` and is skipped on non-Windows machines; only Windows GitHub CI can confirm it.

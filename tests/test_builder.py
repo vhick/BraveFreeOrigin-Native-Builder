@@ -1,5 +1,8 @@
 """Offline regression fixtures; the Windows workflow separately runs real upstream tests."""
 import json
+import os
+import subprocess
+import re
 import struct
 import tempfile
 import unittest
@@ -101,6 +104,42 @@ class TestAdapter(unittest.TestCase):
         self.assertEqual(max(stable,key=semver),'v10.0.1')
         self.assertIsNone(semver('v3.0.0-rc.1'))
         self.assertIsNone(semver('v3.0'))
+    def test_windows_powershell_51_locale_copy_compatibility(self):
+        # Real CI failed on the first upstream locale, ar.json, because a
+        # third positional Join-Path argument requires PowerShell 6+.
+        script = (Path(__file__).resolve().parent.parent / 'scripts' / 'build_native.ps1').read_text(encoding='utf-8')
+        self.assertNotIn("Join-Path $stage 'locales' $f.Name", script)
+        self.assertIn("$localeDestDir = Join-Path -Path $stage -ChildPath 'locales'", script)
+        self.assertIn("$localeTarget = Join-Path -Path $localeDestDir -ChildPath $f.Name", script)
+        self.assertIn('Copy-Item -LiteralPath $f.FullName -Destination $localeTarget', script)
+
+    @unittest.skipUnless(os.name == 'nt', 'Requires Windows PowerShell 5.1 on Windows runner')
+    def test_locale_copy_executes_in_windows_powershell_51(self):
+        script = (Path(__file__).resolve().parent.parent / 'scripts' / 'build_native.ps1').read_text(encoding='utf-8')
+        part = re.search(r"(?ms)^\$localeDestDir = Join-Path.*?^\}\n", script)
+        self.assertIsNotNone(part, 'Unable to extract production locale-copy commands')
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / 'Unicode 漢字 Folder'
+            inputs = root / 'input'
+            locales = root / 'locales'
+            inputs.mkdir(parents=True)
+            locales.mkdir()
+            for n in ('ar.json', 'fr-FR.json', 'zh-CN.json'):
+                (inputs / n).write_text('{}', encoding='utf-8')
+            ps = root / 'smoke.ps1'
+            lines = (
+                "$ErrorActionPreference = 'Stop'\n"
+                "$stage = $args[0]\n"
+                "$loc = @(Get-ChildItem -LiteralPath (Join-Path $stage 'input') -File -Filter '*.json')\n"
+                + part.group(0)
+            )
+            ps.write_text(lines, encoding='utf-8-sig')
+            out = subprocess.run(['powershell.exe', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+                                  '-File', str(ps), str(root)], capture_output=True, text=True)
+            self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+            for n in ('ar.json', 'fr-FR.json', 'zh-CN.json'):
+                self.assertEqual((locales / n).read_text(encoding='utf-8'), '{}')
+
     def test_validator_rejects_wrong_mode_and_accepts_native_fixture(self):
         with tempfile.TemporaryDirectory() as td:
             zip_file = Path(td)/'check.zip'

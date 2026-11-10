@@ -1,4 +1,4 @@
-# Troubleshooting and repair — Native Builder b1r2
+# Troubleshooting and repair — Native Builder b1r3
 
 ## GitHub Actions is not listed
 
@@ -48,3 +48,14 @@ upstream UAC code's catch block, rather than the *post-UAC* GUI initialization.
 This left two closing braces.  Fixed in b1r2: replace all b1r1 files with b1r2
 and run the same native workflow again.  No application ZIP was produced by
 that failed b1r1 run, so no `Data` migration is needed.
+
+
+### b1r2: `PositionalParameterNotFound` for `ar.json`
+
+The b1r2 source adapter passed the PowerShell parser and the build continued
+past the C# compilation checks, but packaging failed while copying locale JSON
+files. Windows PowerShell 5.1 allows only two positional components in a
+`Join-Path` call; the source line supplied `stage`, `locales`, and `ar.json`.
+Fixed in b1r3 by two explicit `Join-Path` calls. Extract the whole b1r3 kit
+over the builder repo, commit and rerun. No completed application ZIP was
+published by that failed run.
