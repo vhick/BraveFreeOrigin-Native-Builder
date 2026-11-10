@@ -1,0 +1,25 @@
+{
+  "kit": "Brave Free Origin NATIVE Builder b1r1",
+  "created_on": "2026-11-10",
+  "note": "This is a builder kit, not a Windows compiled app. Upstream source is retrieved at build time and pinned to a verified release.",
+  "files_sha256": {
+    ".github/workflows/native-build.yml": "bc2a86a4f47ee79de3e650bc4d73d2d55cc5120a03d68500ec1ea33b7270bba8",
+    ".gitignore": "cce194a8db0aba029c0ac54af8054d5626a74c5effe60fa54b6152c651b36e35",
+    "LICENSE": "3f812a418255f9cf88bd0ce4dde8da6ec509e3bef2fbfb678d857f47ec0d7246",
+    "README.md": "7847889960bc184389b04260f14f262a5c7e6e1fe79fc1d24d2e2c55d80bd805",
+    "docs/AUDIT.md": "ce1543b1563b4572af3ddb668d678de5c2d3787cc69d8c8b1de758dc31f8b8af",
+    "docs/MANUAL-WINDOWS-TESTS.md": "9f656c54097899bfb3ac09b834dad2ec889a4dcf09eae0057f6c0252296a73bc",
+    "docs/PACKAGE-README.txt": "7a3b3fd2d08bb966b5c577b8945133c2ea10a26efc86cccc692f2a30f12bfd8b",
+    "docs/TEST-EVIDENCE.md": "be55c121aef6583962f2ef39440b7debc67e2f3c79b7e700843625df788222ad",
+    "docs/TROUBLESHOOTING.md": "6de524cd6ee340b3251a5b0a2626a9fdc28785c43ac07830051bfb4472feb073",
+    "host/BraveFreeOriginHost.cs": "4f2b73f0964b1b14535b61ae2c6b12fa7da168779b2ddf9cc1b27e0ad3d9ea83",
+    "host/app.manifest": "e9c45d19ce2cd66d6fe6061ab93f216d1a3e94864ef39215a67220ae2ea6423d",
+    "scripts/adapt_source.py": "8d87f85b4c089c1f41b0a1cfe23db8a788a9acc3cf960b0eaff9c15547563dac",
+    "scripts/build_native.ps1": "abd8628021df5259b3c95529cb4f1554f25c30cfb7233886bbf3c13c010a8959",
+    "scripts/patch_expert.py": "200e7ffc8863804fdc0a5afb8dc300f89a522af73aaba5fc3de3c68142202579",
+    "scripts/resolve_source.py": "4bcb875924fd9b416fc09098dda9367c844840f46ea080f64aad650d5f168426",
+    "scripts/test_compiled.ps1": "3ce768c83960e1de72f54caad1deaf25145778e068921dc1780b9b3b54c9b0c9",
+    "scripts/validate_native.py": "c58d64d3b3860e9e28546db3084a4c172195a4c0523e8b621f45fef87b77cd12",
+    "tests/test_builder.py": "1db37d92f2c805456d96478f9deef32882cd70ace682d2c71cd819913f916a6c"
+  }
+}

@@ -1,0 +1,86 @@
+name: Brave Free Origin - Build NATIVE Portable from Source
+
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_version:
+        description: 'Published stable upstream version (latest, or e.g. v2.0.2)'
+        required: true
+        type: string
+        default: 'latest'
+      publish:
+        description: 'Publish validated ZIP after a publisher dry run'
+        type: boolean
+        required: true
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: brave-free-origin-native-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  native:
+    name: Source compile, sandbox test, native ZIP, release
+    runs-on: windows-2022
+    timeout-minutes: 35
+    env:
+      PYTHONUTF8: '1'
+      GH_TOKEN: ${{ github.token }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout independent builder repository
+        uses: actions/checkout@v4
+      - name: Select runner Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Local adapter unit tests (before fetching source)
+        run: python -m unittest discover -s tests -v
+      - name: Resolve stable upstream tag, patch source, compile Windows EXE, package ZIP
+        id: build
+        shell: powershell
+        env:
+          BFO_UPSTREAM_VERSION: ${{ inputs.upstream_version }}
+        run: |
+          & .\scripts\build_native.ps1 -Version $env:BFO_UPSTREAM_VERSION
+          if ($LASTEXITCODE -ne 0) { throw 'Native build failed' }
+      - name: Compiled executable runs real upstream application sandbox self-tests
+        if: ${{ steps.build.outputs.skip != 'true' }}
+        shell: powershell
+        run: |
+          & .\scripts\test_compiled.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Native runtime selftest failed' }
+      - name: Independently recheck completed ZIP after sandbox tests
+        if: ${{ steps.build.outputs.skip != 'true' }}
+        run: |
+          $zip = @(Get-ChildItem dist -Filter '*.zip' -File)
+          if ($zip.Count -ne 1) { throw 'Expected exactly one native ZIP' }
+          python scripts/validate_native.py $zip[0].FullName
+          if ($LASTEXITCODE -ne 0) { throw 'Independent ZIP verification failed' }
+      - name: Publisher dry-run (required)
+        if: ${{ steps.build.outputs.skip != 'true' }}
+        uses: vhick/portable-release-publisher@v1.1.1
+        with:
+          files: 'dist/*.zip'
+          tag: ${{ steps.build.outputs.release_tag }}
+          tag-prefix: 'portable-bfo-'
+          release-title: 'Brave Free Origin ${{ steps.build.outputs.upstream_version }} Native Portable (b1r1)'
+          keep-releases: '3'
+          prune: 'false'
+          dry-run: 'true'
+      - name: Publish only verified ZIP after dry-run
+        if: ${{ inputs.publish && steps.build.outputs.skip != 'true' }}
+        uses: vhick/portable-release-publisher@v1.1.1
+        with:
+          files: 'dist/*.zip'
+          tag: ${{ steps.build.outputs.release_tag }}
+          tag-prefix: 'portable-bfo-'
+          release-title: 'Brave Free Origin ${{ steps.build.outputs.upstream_version }} Native Portable (b1r1)'
+          keep-releases: '3'
+          prune: 'false'
+          dry-run: 'false'
