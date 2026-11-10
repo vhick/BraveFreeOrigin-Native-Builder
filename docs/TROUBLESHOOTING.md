@@ -1,4 +1,4 @@
-# Troubleshooting and repair — Native Builder b1r1
+# Troubleshooting and repair — Native Builder b1r2
 
 ## GitHub Actions is not listed
 
@@ -39,3 +39,12 @@ Quit Brave Free Origin. Back up the **entire portable directory** and existing B
 ## Publication did not happen
 
 If `publish=false`, only the dry-run stage runs; the ZIP is not uploaded as a release. If the same exact release tag already exists, the workflow will avoid duplicate publication. A manual/unverified release using the same tag blocks replacement. Check publisher logs for validation errors, missing permissions (`contents: write`) and managed-release ownership.
+
+
+### b1r1: `Unexpected token '}'` in patched PowerShell
+
+The b1r1 source adapter searched for the *first* WinForms `Add-Type` inside the
+upstream UAC code's catch block, rather than the *post-UAC* GUI initialization.
+This left two closing braces.  Fixed in b1r2: replace all b1r1 files with b1r2
+and run the same native workflow again.  No application ZIP was produced by
+that failed b1r1 run, so no `Data` migration is needed.

@@ -27,7 +27,7 @@ try {
     }
     $packageHash = ([BitConverter]::ToString($builderHash.ComputeHash($concatenated.ToArray()))).Replace('-','').ToLowerInvariant().Substring(0,8)
 } finally { $builderHash.Dispose(); $concatenated.Dispose() }
-$preTag = "portable-bfo-$($resolved.upstream_release)-native-b1r1-g$($resolved.upstream_commit.Substring(0,8))-p$packageHash"
+$preTag = "portable-bfo-$($resolved.upstream_release)-native-b1r2-g$($resolved.upstream_commit.Substring(0,8))-p$packageHash"
 # Protect an existing verified release from recompilation with different PE timestamps.
 if ($env:GITHUB_ACTIONS -eq 'true') {
     $oldError = $ErrorActionPreference
@@ -60,7 +60,20 @@ if ($env:GITHUB_ACTIONS -eq 'true') {
 if ($LASTEXITCODE -ne 0) { throw 'Fail-closed application adapter failed' }
 $tokens=$null; $parseErrors=$null
 [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'work/Brave-Free-Origin-Native.ps1').Path, [ref]$tokens, [ref]$parseErrors)
-if ($parseErrors.Count -gt 0) { $parseErrors | Format-List; throw 'Patched source does not parse in Windows PowerShell 5.1' }
+if ($parseErrors.Count -gt 0) {
+    # Report the actual broken lines, not just the closing brace's token.
+    # This makes adapter regressions much easier to pinpoint from Actions logs.
+    $lines = [System.IO.File]::ReadAllLines((Resolve-Path 'work/Brave-Free-Origin-Native.ps1').Path, [System.Text.Encoding]::ASCII)
+    foreach ($parseError in $parseErrors) {
+        $lineNum = $parseError.Extent.StartLineNumber
+        $colNum = $parseError.Extent.StartColumnNumber
+        Write-Host ("PowerShell 5.1 parser: line {0}, column {1}: {2}" -f $lineNum,$colNum,$parseError.Message)
+        if ($lineNum -gt 0 -and $lineNum -le $lines.Length) {
+            Write-Host ("  SOURCE: " + $lines[$lineNum - 1].Trim())
+        }
+    }
+    throw 'Patched source does not parse in Windows PowerShell 5.1'
+}
 
 # Build using Microsoft's compiler and built-in Windows PowerShell engine API.
 # No NuGet, PowerShell Gallery, third-party PS2EXE, or network package needed.
@@ -92,7 +105,7 @@ $identity | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $stage
 $version = $identity.upstream_release
 $shortSha = $identity.upstream_commit.Substring(0,8)
 $tag = $preTag
-$name = "BraveFreeOrigin-NativePortable-$version-b1r1-g$shortSha-p$packageHash.zip"
+$name = "BraveFreeOrigin-NativePortable-$version-b1r2-g$shortSha-p$packageHash.zip"
 $zip = Join-Path $repo ('dist/' + $name)
 if (Test-Path $zip) { throw 'Refusing to overwrite an existing native artifact' }
 # Python zipfile creates explicit Data/ directory entry, preserving empty folder.

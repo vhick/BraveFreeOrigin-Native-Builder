@@ -34,10 +34,16 @@ def adapt(original: str) -> str:
     # Upstream reruns powershell.exe and -File $PSCommandPath under UAC.
     # The native C# EXE now owns UAC; never spawn a script-based wrapper.
     preface = "# Elevation. Policies live under HKLM, so the app needs administrator rights."
-    after = "Add-Type -AssemblyName System.Windows.Forms"
+    # IMPORTANT: upstream's UAC catch block ALSO contains Add-Type for its
+    # refusal dialog. Searching for the first Add-Type incorrectly truncates
+    # the catch block and leaves TWO stray closing braces in the result.
+    # Anchor to the two consecutive GUI-init statements AFTER the UAC block.
+    after = "\nAdd-Type -AssemblyName System.Windows.Forms\nAdd-Type -AssemblyName System.Drawing"
     beg = s.find(preface)
     end = s.find(after, beg)
-    if beg < 0 or end < 0 or s[beg:end].count("Start-Process -FilePath 'powershell.exe'") != 1:
+    if (beg < 0 or end < 0 or s.count(after) != 1
+            or s[beg:end].count("Start-Process -FilePath 'powershell.exe'") != 1
+            or not s[beg:end].rstrip().endswith("}")):
         raise RuntimeError("Unexpected UAC bootstrap; source audit must be repeated")
     s = s[:beg] + (
         "# NATIVE: the compiled same-executable host performs UAC elevation.\n"
@@ -45,7 +51,7 @@ def adapt(original: str) -> str:
         "if (-not $script:SelfTestMode -and -not (Test-IsAdministrator)) {\n"
         "    throw 'Elevation is required for Brave policies; native host UAC did not complete.'\n"
         "}\n"
-    ) + s[end:]
+    ) + s[end + 1:]  # consume separator newline; keep the actual GUI Add-Type
     old_backup = ("    $docs = [Environment]::GetFolderPath('MyDocuments')\n"
                   "    if (-not $docs) { $docs = Join-Path $env:USERPROFILE 'Documents' }\n"
                   "    $dir = Join-Path $docs 'Brave-Free-Origin-Backups'\n"

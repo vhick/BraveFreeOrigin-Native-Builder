@@ -18,10 +18,22 @@ $BfoSettingsPath = if ($script:SelfTestMode) { Join-Path ([System.IO.Path]::GetT
                        else { Join-Path $env:LOCALAPPDATA 'Brave-Free-Origin\\settings.json' }
 }
 # Elevation. Policies live under HKLM, so the app needs administrator rights.
-if (-not $script:SelfTestMode) {
-    Start-Process -FilePath 'powershell.exe'
+# The relaunch is hidden (the GUI is the only window the user should see) and
+# a refused UAC prompt is explained instead of surfacing as a red PowerShell
+# error and a misleading launcher message.
+if (-not $script:SelfTestMode -and -not (Test-IsAdministrator)) {
+    $relaunchArgs = @('-NoLogo', '-NoProfile', '-File', $PSCommandPath)
+    try {
+        Start-Process -FilePath 'powershell.exe' -Verb RunAs -WindowStyle Hidden -ArgumentList $relaunchArgs -ErrorAction Stop | Out-Null
+        exit 0
+    } catch {
+        Add-Type -AssemblyName System.Windows.Forms
+        [void][System.Windows.Forms.MessageBox]::Show('Denied UAC')
+        exit 2
+    }
 }
 Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
 $script:LocaleDir       = Join-Path $PSScriptRoot 'locales'
 function Get-BackupDirectory {
     $docs = [Environment]::GetFolderPath('MyDocuments')
@@ -62,6 +74,21 @@ class TestAdapter(unittest.TestCase):
         self.assertNotIn("GetFolderPath('MyDocuments')", patched)
         self.assertNotIn('exit $script:SelfTestExit', patched)
         self.assertIn('SelfTestMode', patched)
+        # Regression for real upstream v2.0.2: there are TWO Add-Type lines,
+        # one inside catch and one after the elevation block.  The first
+        # used to be mistaken for the end of the bootstrap (two stray braces).
+        self.assertEqual(patched.count('Add-Type -AssemblyName System.Windows.Forms'), 1)
+        self.assertIn('Add-Type -AssemblyName System.Windows.Forms\nAdd-Type -AssemblyName System.Drawing', patched)
+        self.assertNotIn("exit 2\n    }\n}\nAdd-Type", patched)
+        self.assertNotIn('exit 2', patched)
+    def test_uac_gui_end_marker_must_be_complete(self):
+        # Refuse upstream drift rather than picking the first Add-Type inside catch.
+        with self.assertRaises(RuntimeError):
+            adapt(FIXTURE.replace('Add-Type -AssemblyName System.Drawing',
+                                  '# upstream GUI initializer unexpectedly moved'))
+        # Refuse a second (ambiguous) marker.
+        with self.assertRaises(RuntimeError):
+            adapt(FIXTURE + '\nAdd-Type -AssemblyName System.Windows.Forms\nAdd-Type -AssemblyName System.Drawing\n')
     def test_unknown_upstream_edit_fails_closed(self):
         with self.assertRaises(RuntimeError):
             adapt(FIXTURE.replace('Brave-Free-Origin\\settings.json','changed-name\\settings.json'))

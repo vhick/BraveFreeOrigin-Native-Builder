@@ -1,25 +1,26 @@
 {
-  "kit": "Brave Free Origin NATIVE Builder b1r1",
+  "kit": "Brave Free Origin NATIVE Builder b1r2",
   "created_on": "2026-11-10",
-  "note": "This is a builder kit, not a Windows compiled app. Upstream source is retrieved at build time and pinned to a verified release.",
+  "fix": "Use exact post-elevation WinForms and Drawing GUI initialization marker; b1r1 accidentally stopped inside UAC catch and left two unexpected closing braces",
+  "note": "Builder source kit only. Windows compilation and GUI tests remain unverified until workflow runs.",
   "files_sha256": {
-    ".github/workflows/native-build.yml": "bc2a86a4f47ee79de3e650bc4d73d2d55cc5120a03d68500ec1ea33b7270bba8",
+    ".github/workflows/native-build.yml": "f0da40d645fa57afff40d3bd8d4a2a83b815c6f29078a2b7e45051567bc8da15",
     ".gitignore": "cce194a8db0aba029c0ac54af8054d5626a74c5effe60fa54b6152c651b36e35",
     "LICENSE": "3f812a418255f9cf88bd0ce4dde8da6ec509e3bef2fbfb678d857f47ec0d7246",
-    "README.md": "7847889960bc184389b04260f14f262a5c7e6e1fe79fc1d24d2e2c55d80bd805",
-    "docs/AUDIT.md": "ce1543b1563b4572af3ddb668d678de5c2d3787cc69d8c8b1de758dc31f8b8af",
+    "README.md": "6bf32aa4c2ff29a9c090bb88b4b02bfa4007fe1caa8894a2b1ead8f55a3ca32c",
+    "docs/AUDIT.md": "61d52e328cc3b61abd511ec22ef600b0f28e962948636542f1a01202aca3dcdb",
     "docs/MANUAL-WINDOWS-TESTS.md": "9f656c54097899bfb3ac09b834dad2ec889a4dcf09eae0057f6c0252296a73bc",
     "docs/PACKAGE-README.txt": "7a3b3fd2d08bb966b5c577b8945133c2ea10a26efc86cccc692f2a30f12bfd8b",
-    "docs/TEST-EVIDENCE.md": "be55c121aef6583962f2ef39440b7debc67e2f3c79b7e700843625df788222ad",
-    "docs/TROUBLESHOOTING.md": "6de524cd6ee340b3251a5b0a2626a9fdc28785c43ac07830051bfb4472feb073",
-    "host/BraveFreeOriginHost.cs": "4f2b73f0964b1b14535b61ae2c6b12fa7da168779b2ddf9cc1b27e0ad3d9ea83",
+    "docs/TEST-EVIDENCE.md": "2e4992e71434a91648fda00b5a6fcb61e16d914017d1010dd7c8e6246bc06278",
+    "docs/TROUBLESHOOTING.md": "df47d169e3cf4f4146582b7acaf5910fa610f1d40ea0ea9bade7e98d73461668",
+    "host/BraveFreeOriginHost.cs": "ba2cc2acbc44510f346ed47a65dd4cd019fe16b8f41bdcf79d8d72f5f7a02d3e",
     "host/app.manifest": "e9c45d19ce2cd66d6fe6061ab93f216d1a3e94864ef39215a67220ae2ea6423d",
-    "scripts/adapt_source.py": "8d87f85b4c089c1f41b0a1cfe23db8a788a9acc3cf960b0eaff9c15547563dac",
-    "scripts/build_native.ps1": "abd8628021df5259b3c95529cb4f1554f25c30cfb7233886bbf3c13c010a8959",
+    "scripts/adapt_source.py": "638dfced576d7c10640793d3a161da65d0512eca9bc14ab5af21a9af6ae44fc1",
+    "scripts/build_native.ps1": "a08de883ce08f7182d5b700e7e00e24fd34a837ed16e7a15f58a14b35bfdb417",
     "scripts/patch_expert.py": "200e7ffc8863804fdc0a5afb8dc300f89a522af73aaba5fc3de3c68142202579",
-    "scripts/resolve_source.py": "4bcb875924fd9b416fc09098dda9367c844840f46ea080f64aad650d5f168426",
+    "scripts/resolve_source.py": "1a3e533b3ac1f276042e6abccb9357e4d1df81ebcdca869026711e1af811fafd",
     "scripts/test_compiled.ps1": "3ce768c83960e1de72f54caad1deaf25145778e068921dc1780b9b3b54c9b0c9",
     "scripts/validate_native.py": "c58d64d3b3860e9e28546db3084a4c172195a4c0523e8b621f45fef87b77cd12",
-    "tests/test_builder.py": "1db37d92f2c805456d96478f9deef32882cd70ace682d2c71cd819913f916a6c"
+    "tests/test_builder.py": "9cc56e21e5ea547fe274b0e6ef4ad165c4825e82db92252d2d9c8337887a943c"
   }
 }

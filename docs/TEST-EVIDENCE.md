@@ -1,4 +1,4 @@
-# Validation evidence — Brave Free Origin Native Builder b1r1
+# Validation evidence — Brave Free Origin Native Builder b1r2
 
 **Evidence at authoring (2026-11-10).** This project was developed in a Linux-based container without a Windows desktop or functioning outbound source-fetch access for `git`. No Windows PE was produced here. A tested ZIP builder kit is NOT the same thing as a proven Windows portable release.
 
@@ -22,3 +22,15 @@
 | User-confirmed Windows functionality | NOT YET VERIFIED | User must test and confirm |
 
 **Reminder:** tests with mocked/stub MZ payloads intentionally reject them as non-genuine compiled apps. They do not manufacture successful Windows-run evidence.
+
+
+## b1r2 offline regression
+
+- Original b1r1 GitHub Actions log was reviewed: source resolver and 5 unit
+  tests passed; patched PowerShell 5.1 parser rejected two leftover `}`;
+  compiler and publisher were not reached (FAILED/BLOCKED for b1r1).
+- Corrected adapter to use the unique post-elevation WinForms + Drawing
+  initialization pair; the additional fixture test checks two occurrences of
+  WinForms initialization and rejects ambiguous/changed boundaries.
+- Six local Python unit tests passed (STATIC-VALIDATED); no Windows compilation
+  or interactive desktop runtime has been performed for b1r2.
